@@ -66,7 +66,7 @@ window.STUDY_CORNER_CONFIG = {
   // Leave "" to run same-browser only (works across tabs, not across devices).
   // Setup steps are in the README.
   cloud: {
-    notesUrl: "",
+    notesUrl: "https://talas-study-corner-default-rtdb.firebaseio.com",
     pollSeconds: 8,
   },
 };
