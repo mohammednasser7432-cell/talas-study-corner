@@ -12,21 +12,6 @@
 </head>
 <body>
 
-  <!-- ===== Consent notice (§6) — overlay, appears every visit ===== -->
-  <div id="consentBanner" class="consent" hidden>
-    <div class="consent__inner">
-      <p class="consent__text">
-        While you study, your activity and listening <em>can be seen by him</em>
-        on a private page. This is always your choice — is that okay right now?
-      </p>
-      <div class="consent__actions">
-        <button class="btn btn--soft" data-consent="yes">Yes, that's fine 💛</button>
-        <button class="btn btn--ghost" data-consent="no">No, keep it private 🔒</button>
-      </div>
-      <p class="consent__state" id="consentState"></p>
-    </div>
-  </div>
-
   <!-- ===================== GARDEN (main view) ===================== -->
   <main class="garden">
 
@@ -218,14 +203,6 @@
               <button id="themeToggle" class="icon-btn" title="Toggle dark mode"><span class="icon-btn__sun">☀️</span><span class="icon-btn__moon">🌙</span></button></div>
             <p class="muted small" style="margin:12px 0 6px">Garden scene</p>
             <div class="bg-switch" id="bgSwitch"></div>
-          </div>
-        </div>
-
-        <div class="tool" data-tool="privacy">
-          <button class="tool__head"><span>🔒 Sharing &amp; privacy</span><i class="chev"></i></button>
-          <div class="tool__body">
-            <p class="muted small" style="margin-top:0">Choose whether he can see your study activity. You can change this anytime.</p>
-            <button id="privacyChip" class="btn btn--ghost">Review sharing choice</button>
           </div>
         </div>
 
