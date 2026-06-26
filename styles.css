@@ -122,7 +122,7 @@ body {
 .pl-flower .pl-flower-core { fill: #f6d36a; }
 
 /* ----- Plant pot (replaces the old soil mound) ----- */
-.pot { width: clamp(160px, 24vh, 250px); height: clamp(64px, 10vh, 92px); margin: -14px auto 0;
+.pot { width: clamp(160px, 24vh, 250px); height: clamp(64px, 10vh, 92px); margin: -38px auto 0;
   position: relative; z-index: 1; }
 .pot__soil { position: absolute; left: 16%; right: 16%; top: 6px; height: 16px; border-radius: 50%;
   background: radial-gradient(ellipse at 50% 35%, #5c4029, #3a2a18); z-index: 2; }
