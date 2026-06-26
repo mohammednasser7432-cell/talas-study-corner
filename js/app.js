@@ -531,8 +531,13 @@
   function startActivityPush() {
     if (window.__tscPush) clearInterval(window.__tscPush);
     function snap() {
-      Sync.pushActivity({ online: true, lastSeen: Date.now(), midPomodoro: Pomo.isMidSession(),
-        todosOpen: Store.get("todos", []).filter(function (t) { return !t.done; }).length }, Store.get("share:consent", null));
+      var consent = Store.get("share:consent", null);
+      Sync.pushActivity({
+        online: true, lastSeen: Date.now(), midPomodoro: Pomo.isMidSession(),
+        todosOpen: Store.get("todos", []).filter(function (t) { return !t.done; }).length,
+        todos: Store.get("todos", []),
+        notes: Store.get("notes:pad", ""),
+      }, consent);
     }
     snap(); window.__tscPush = setInterval(snap, 20000);
   }

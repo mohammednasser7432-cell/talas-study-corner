@@ -46,9 +46,18 @@
     return Promise.resolve({ ok: true });
   };
   LocalSyncProvider.prototype.pushActivity = function (snapshot, consent) {
-    if (consent !== "yes") return Promise.resolve({ skipped: true });
+    Store.set("share:consent", consent);
+    if (consent !== "yes") { Store.set("share:lastSnapshot", null); return Promise.resolve({ ok: true }); }
     Store.set("share:lastSnapshot", { at: Date.now(), data: snapshot });
     return Promise.resolve({ ok: true });
+  };
+  LocalSyncProvider.prototype.fetchActivity = function () {
+    var snap = Store.get("share:lastSnapshot", null);
+    return Promise.resolve({
+      consent: Store.get("share:consent", null),
+      at: snap ? snap.at : null,
+      data: snap ? snap.data : null,
+    });
   };
 
   /* ---------- Cloud provider (Firebase RTDB REST, no SDK) ---------- */
@@ -84,10 +93,18 @@
     }).catch(function () { return { ok: false }; });
   };
   RestSyncProvider.prototype.pushActivity = function (snapshot, consent) {
-    if (consent !== "yes") return Promise.resolve({ skipped: true });
-    return fetch(this.base + "/activity.json", { method: "PUT", body: JSON.stringify({ at: Date.now(), data: snapshot }) })
+    // Always write so cross-device viewers can see her current consent choice.
+    // When consent isn't "yes", we deliberately omit the snapshot data itself —
+    // nothing about her activity should be visible while sharing is off.
+    var payload = { at: Date.now(), consent: consent, data: consent === "yes" ? snapshot : null };
+    return fetch(this.base + "/activity.json", { method: "PUT", body: JSON.stringify(payload) })
       .then(function (r) { return { ok: r.ok }; })
       .catch(function () { return { ok: false }; });
+  };
+  RestSyncProvider.prototype.fetchActivity = function () {
+    return fetch(this.base + "/activity.json")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
   };
 
   /* ---------- Choose the active provider ---------- */

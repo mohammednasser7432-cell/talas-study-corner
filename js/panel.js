@@ -53,52 +53,53 @@
 
   /* ---------- §6 activity ---------- */
   function renderActivity() {
-    var consent = Store.get("share:consent", null);
-    var badge = $("#consentBadge");
-    badge.textContent = consent === "yes" ? "Sharing on" : "Private";
-    badge.className = "badge-consent " + (consent === "yes" ? "badge-yes" : "badge-no");
+    Sync.fetchActivity().then(function (remote) {
+      var consent = remote && remote.consent;
+      var badge = $("#consentBadge");
+      badge.textContent = consent === "yes" ? "Sharing on" : "Private";
+      badge.className = "badge-consent " + (consent === "yes" ? "badge-yes" : "badge-no");
 
-    var body = $("#activityBody"), prog = $("#progressBody");
+      var body = $("#activityBody"), prog = $("#progressBody");
 
-    if (consent !== "yes") {
-      body.innerHTML = '<div class="private-note"><div class="big">🔒</div>' +
-        '<p>She’s chosen to keep things private right now.</p>' +
-        '<p class="muted2">Nothing about her activity is shown while sharing is off — by design.</p></div>';
-      prog.innerHTML = '<p class="muted2">Progress only covers weeks she had sharing on. Right now that’s paused.</p>';
-      return;
-    }
+      if (consent !== "yes") {
+        body.innerHTML = '<div class="private-note"><div class="big">🔒</div>' +
+          '<p>She’s chosen to keep things private right now.</p>' +
+          '<p class="muted2">Nothing about her activity is shown while sharing is off — by design.</p></div>';
+        prog.innerHTML = '<p class="muted2">Progress only covers weeks she had sharing on. Right now that’s paused.</p>';
+        return;
+      }
 
-    var snap = Store.get("share:lastSnapshot", null);
-    var data = snap && snap.data ? snap.data : {};
-    var lastSeen = data.lastSeen || (snap && snap.at) || null;
-    var online = lastSeen && (Date.now() - lastSeen < 70000); // her dashboard pings ~every 20s
+      var data = (remote && remote.data) || {};
+      var lastSeen = data.lastSeen || (remote && remote.at) || null;
+      var online = lastSeen && (Date.now() - lastSeen < 70000); // her dashboard pings ~every 20s
 
-    var rows = "";
-    rows += kv("Status", (online ? '<span class="dot-live"></span>On the dashboard'
-                                  : '<span class="dot-off"></span>Away'));
-    rows += kv("Last seen", ago(lastSeen));
-    rows += kv("Focus session", data.midPomodoro ? "In a Pomodoro right now 🍃" : "Not mid-session");
-    rows += kv("Open tasks", (data.todosOpen != null ? data.todosOpen : "—"));
-    body.innerHTML = rows;
+      var rows = "";
+      rows += kv("Status", (online ? '<span class="dot-live"></span>On the dashboard'
+                                    : '<span class="dot-off"></span>Away'));
+      rows += kv("Last seen", ago(lastSeen));
+      rows += kv("Focus session", data.midPomodoro ? "In a Pomodoro right now 🍃" : "Not mid-session");
+      rows += kv("Open tasks", (data.todosOpen != null ? data.todosOpen : "—"));
+      body.innerHTML = rows;
 
-    // her tasks (read-only)
-    var todos = Store.get("todos", []);
-    var notes = Store.get("notes:pad", "");
-    var extra = '<h2 style="margin-top:20px;">Her tasks</h2>';
-    if (todos.length) {
-      extra += '<ul class="ro-list">' + todos.map(function (t) {
-        return '<li class="' + (t.done ? "done" : "") + '">' + esc(t.text) + "</li>";
-      }).join("") + "</ul>";
-    } else extra += '<p class="muted2">No tasks listed.</p>';
-    extra += '<h2 style="margin-top:20px;">Her notes</h2>';
-    extra += notes.trim() ? '<div class="ro-pad">' + esc(notes) + "</div>"
-                          : '<p class="muted2">Her scratchpad is empty.</p>';
-    extra += '<h2 style="margin-top:20px;">Listening</h2>';
-    extra += '<p class="muted2">Recent-tracks history needs the Spotify Web API via cloud sync — ' +
-             'not available in this local preview (the free-tier embed can’t expose track data).</p>';
-    body.insertAdjacentHTML("beforeend", extra);
+      // her tasks (read-only) — synced from her device via the same cloud channel as notes
+      var todos = data.todos || [];
+      var notes = data.notes || "";
+      var extra = '<h2 style="margin-top:20px;">Her tasks</h2>';
+      if (todos.length) {
+        extra += '<ul class="ro-list">' + todos.map(function (t) {
+          return '<li class="' + (t.done ? "done" : "") + '">' + esc(t.text) + "</li>";
+        }).join("") + "</ul>";
+      } else extra += '<p class="muted2">No tasks listed.</p>';
+      extra += '<h2 style="margin-top:20px;">Her notes</h2>';
+      extra += notes.trim() ? '<div class="ro-pad">' + esc(notes) + "</div>"
+                            : '<p class="muted2">Her scratchpad is empty.</p>';
+      extra += '<h2 style="margin-top:20px;">Listening</h2>';
+      extra += '<p class="muted2">Recent-tracks history needs the Spotify Web API via cloud sync — ' +
+               'not available in this local preview (the free-tier embed can’t expose track data).</p>';
+      body.insertAdjacentHTML("beforeend", extra);
 
-    renderProgress();
+      renderProgress();
+    });
   }
 
   function renderProgress() {
