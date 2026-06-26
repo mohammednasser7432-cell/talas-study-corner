@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Panel · Tala's Study Corner</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Fraunces:ital,opsz,wght@1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+    .panel-wrap { max-width: 860px; margin: 0 auto; padding: 28px clamp(16px,4vw,40px) 60px; }
+    .panel-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+    .panel-top h1 { font-family: var(--display); font-weight: 400; letter-spacing: 0.5px; font-size: clamp(1.6rem,4vw,2.2rem); margin: 0; }
+    .panel-sub { color: var(--ink-soft); font-family: "Fraunces", serif; font-style: italic; margin: 2px 0 0; }
+    .stack { display: flex; flex-direction: column; gap: 18px; }
+    .panel-card { background: var(--card); backdrop-filter: blur(14px); border: 1px solid var(--card-brd);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+    .panel-card h2 { font-family: var(--display); font-weight: 400; letter-spacing: 0.4px; font-size: 1.3rem; margin: 0 0 14px; }
+    .kv { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--card-brd); }
+    .kv:last-child { border-bottom: none; }
+    .kv__k { width: 130px; flex: 0 0 auto; color: var(--ink-soft); font-size: 0.86rem; }
+    .kv__v { font-weight: 700; }
+    .dot-live { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 6px; }
+    .dot-off  { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--ink-soft); margin-right: 6px; opacity: .5; }
+    .ro-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .ro-list li { padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb,var(--card) 50%,transparent); border: 1px solid var(--card-brd); font-size: 0.9rem; }
+    .ro-list li.done { color: var(--ink-soft); text-decoration: line-through; }
+    .ro-pad { white-space: pre-wrap; font-size: 0.92rem; line-height: 1.55; padding: 12px; border-radius: 14px;
+      background: color-mix(in srgb,var(--card) 50%,transparent); border: 1px solid var(--card-brd); min-height: 40px; }
+    .wk-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .wk-table th, .wk-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--card-brd); }
+    .wk-table th { color: var(--ink-soft); font-weight: 700; }
+    .wk-gap td { color: var(--ink-soft); font-style: italic; }
+    .private-note { text-align: center; padding: 30px 16px; color: var(--ink-soft); }
+    .private-note .big { font-size: 2rem; }
+    .muted2 { color: var(--ink-soft); font-size: 0.84rem; }
+    .send-row { display: flex; flex-direction: column; gap: 10px; }
+    .send-row textarea { width: 100%; min-height: 80px; border-radius: 16px; }
+    .sent-note { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px;
+      background: color-mix(in srgb,var(--accent) 10%,var(--card)); border: 1px solid var(--card-brd); }
+    .sent-note p { margin: 0 0 4px; flex: 1; }
+    .sent-note time { font-size: 0.72rem; color: var(--ink-soft); }
+    .gate { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px;
+      background: linear-gradient(160deg,#eef7e8,#dfeedb); }
+    .gate__box { background: var(--card); border: 1px solid var(--card-brd); border-radius: 24px; box-shadow: var(--shadow);
+      padding: 28px; width: min(360px,100%); text-align: center; }
+    .gate__box input { width: 100%; margin: 14px 0; text-align: center; }
+    .badge-consent { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em;
+      padding: 6px 13px; border-radius: 999px; }
+    .badge-yes { background: color-mix(in srgb,var(--accent) 24%,#fff); color: #2f6b48; }
+    .badge-no  { background: color-mix(in srgb,var(--accent-2) 24%,#fff); color: #9c4f68; }
+  </style>
+</head>
+<body>
+
+  <div id="gate" class="gate" hidden>
+    <div class="gate__box">
+      <h2 style="font-family:var(--display);font-weight:400;margin:0;">Private panel 🔒</h2>
+      <p class="muted2">Enter the passcode to continue.</p>
+      <input id="gateInput" type="password" placeholder="Passcode" />
+      <button id="gateBtn" class="btn btn--soft">Open</button>
+      <p id="gateErr" class="muted2" style="color:var(--accent-2);" hidden>Not quite — try again.</p>
+    </div>
+  </div>
+
+  <main class="panel-wrap" id="panelMain" hidden>
+    <div class="panel-top">
+      <div>
+        <h1>Her activity</h1>
+        <p class="panel-sub">A private window — only what she's chosen to share. 💚</p>
+      </div>
+      <span id="consentBadge" class="badge-consent badge-no">Private</span>
+    </div>
+
+    <div class="stack">
+
+      <!-- §6 activity (consent-gated) -->
+      <section class="panel-card" id="activityCard">
+        <h2>Right now</h2>
+        <div id="activityBody"></div>
+      </section>
+
+      <section class="panel-card" id="progressCard">
+        <h2>Progress</h2>
+        <div id="progressBody"></div>
+      </section>
+
+      <!-- §5 write a note to her -->
+      <section class="panel-card">
+        <h2>Leave her a note 💌</h2>
+        <p class="muted2" style="margin-top:0;">She sees the latest for 24 hours; older ones move to her archive. Only you can write here.</p>
+        <div class="send-row">
+          <textarea id="noteInput" placeholder="Write something warm…"></textarea>
+          <div><button id="noteSend" class="btn btn--soft">Send to her</button></div>
+        </div>
+        <div id="sentNotes" style="margin-top:16px; display:flex; flex-direction:column; gap:10px;"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/panel.js"></script>
+</body>
+</html>

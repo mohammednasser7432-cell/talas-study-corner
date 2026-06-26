@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tala's Study Corner 🌿</title>
+  <meta name="description" content="A calm little garden for studying." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Fraunces:ital,opsz,wght@1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== Consent notice (§6) — overlay, appears every visit ===== -->
+  <div id="consentBanner" class="consent" hidden>
+    <div class="consent__inner">
+      <p class="consent__text">
+        While you study, your activity and listening <em>can be seen by him</em>
+        on a private page. This is always your choice — is that okay right now?
+      </p>
+      <div class="consent__actions">
+        <button class="btn btn--soft" data-consent="yes">Yes, that's fine 💛</button>
+        <button class="btn btn--ghost" data-consent="no">No, keep it private 🔒</button>
+      </div>
+      <p class="consent__state" id="consentState"></p>
+    </div>
+  </div>
+
+  <!-- ===================== GARDEN (main view) ===================== -->
+  <main class="garden">
+
+    <!-- ambient sky -->
+    <div class="sky" aria-hidden="true">
+      <div class="sun"></div>
+      <div class="cloud cloud--1"></div>
+      <div class="cloud cloud--2"></div>
+      <div class="cloud cloud--3"></div>
+      <div class="bird-amb bird-amb--1"></div>
+      <div class="bird-amb bird-amb--2"></div>
+      <div class="leaf leaf--1"></div>
+      <div class="leaf leaf--2"></div>
+      <div class="leaf leaf--3"></div>
+      <div class="tree tree--left"></div>
+      <div class="tree tree--right"></div>
+    </div>
+    <div class="ground" aria-hidden="true"></div>
+
+    <!-- new-note banner -->
+    <div id="noteBanner" class="note-banner" hidden>
+      <span>💌 A new note just arrived in your basket</span>
+      <button id="noteBannerOpen" class="btn btn--soft btn--tiny">open</button>
+    </div>
+
+    <!-- delivery bird -->
+    <div id="deliveryBird" class="delivery-bird" hidden aria-hidden="true">
+      <span class="delivery-bird__body">🕊️</span><span class="delivery-bird__note">💌</span>
+    </div>
+
+    <!-- TO-DO signboard (left) -->
+    <section class="signboard" aria-label="To-Do">
+      <div class="signboard__board">
+        <div class="signboard__head"><h2>To-Do</h2><span id="todoCount" class="pill">0</span></div>
+        <form id="todoForm" class="inline-form">
+          <input id="todoInput" type="text" placeholder="Plant a task…" autocomplete="off" />
+          <button class="btn btn--soft btn--icon" type="submit">＋</button>
+        </form>
+        <ul id="todoList" class="todo-list scroll-y"></ul>
+        <p class="signboard__hint muted tiny">Finish tasks to help your plant grow 🌱</p>
+      </div>
+      <div class="signboard__post"></div>
+    </section>
+
+    <!-- PLANT (center, in soil) -->
+    <div class="plant-bed">
+      <div id="plant" class="plant"></div>
+      <div class="soil"></div>
+      <p id="plantMsg" class="plant-msg"></p>
+    </div>
+
+    <!-- BASKET (right) -->
+    <button class="basket" id="basket" aria-label="Open notes basket">
+      <span class="basket__lid"></span>
+      <span class="basket__body"></span>
+      <span id="basketBadge" class="basket__badge" hidden>0</span>
+      <span class="basket__label">notes 💌</span>
+    </button>
+
+    <!-- SIGNPOST menu trigger (bottom-left) -->
+    <button class="signpost" id="menuTrigger" aria-label="Open the garden menu">
+      <span class="signpost__sign">menu</span>
+      <span class="signpost__pole"></span>
+    </button>
+  </main>
+
+  <!-- ===================== DRAWER (everything else) ===================== -->
+  <div id="drawer" class="drawer" hidden>
+    <div class="drawer__scrim" id="drawerScrim"></div>
+    <aside class="drawer__panel">
+      <div class="drawer__head">
+        <div class="drawer__greet">
+          <h2 id="greeting" class="greeting">Hello 🌸</h2>
+          <p id="quote" class="quote">…</p>
+        </div>
+        <button id="drawerClose" class="icon-btn" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="drawer__list scroll-y">
+
+        <div class="tool" data-tool="pomodoro">
+          <button class="tool__head"><span>⏳ Focus Timer</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <div class="row-between"><span id="pomoMode" class="pill">Work</span></div>
+            <input id="intentionInput" class="intention" type="text" autocomplete="off" placeholder="What are you focusing on? (optional)" />
+            <div class="ring-wrap">
+              <svg class="ring" viewBox="0 0 220 220">
+                <circle class="ring__track" cx="110" cy="110" r="96" />
+                <circle class="ring__fill" cx="110" cy="110" r="96" id="ringFill" />
+              </svg>
+              <div class="ring__center">
+                <div id="pomoTime" class="ring__time">25:00</div>
+                <div id="pomoRound" class="ring__round">Round 1</div>
+              </div>
+            </div>
+            <div class="pomo-controls">
+              <button id="pomoStart" class="btn btn--soft">Start</button>
+              <button id="pomoReset" class="btn btn--ghost">Reset</button>
+              <button id="pomoSkip" class="btn btn--ghost">Skip</button>
+            </div>
+            <div class="pomo-len">
+              <label>Work <input type="number" id="lenWork" min="1" max="120" /></label>
+              <label>Break <input type="number" id="lenBreak" min="1" max="60" /></label>
+            </div>
+            <div class="stat-row">
+              <div class="stat"><div class="stat__num" id="statToday">0m</div><div class="stat__lbl">focused</div></div>
+              <div class="stat"><div class="stat__num" id="statSessions">0</div><div class="stat__lbl">sessions</div></div>
+              <div class="stat"><div class="stat__num" id="statTotal">0h</div><div class="stat__lbl">all-time</div></div>
+            </div>
+            <div id="reflectPanel" class="reflect" hidden>
+              <p class="reflect__q">How did that go?</p>
+              <p id="reflectIntention" class="reflect__intent"></p>
+              <div class="reflect__opts">
+                <button class="reflect__opt" data-reflect="great">great 🌟</button>
+                <button class="reflect__opt" data-reflect="okay">okay 🙂</button>
+                <button class="reflect__opt" data-reflect="rough">rough 🫂</button>
+              </div>
+              <button id="reflectClose" class="link-btn">skip</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="notes">
+          <button class="tool__head"><span>📝 Notes</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <div class="pad-head"><span class="pill pill--muted" id="notesSaved">saved</span></div>
+            <textarea id="notesPad" class="pad" placeholder="A space for your thoughts…"></textarea>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="streak">
+          <button class="tool__head"><span>🌱 Streak</span><span id="streakNow" class="pill">0</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <div class="streak-stats">
+              <div class="streak-stat"><span class="streak-stat__num" id="streakCurrent">0</span><span class="streak-stat__lbl">current</span></div>
+              <div class="streak-stat"><span class="streak-stat__num" id="streakBest">0</span><span class="streak-stat__lbl">best ever</span></div>
+            </div>
+            <div id="streakGrid" class="streak-grid"></div>
+            <p class="muted small">Each dot is a day you showed up. 🌱</p>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="countdown">
+          <button class="tool__head"><span>📅 Countdown</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <div id="countdownView" class="countdown" hidden>
+              <div class="countdown__num"><span id="cdDays">0</span><small>days</small></div>
+              <div class="countdown__label" id="cdLabel">Exam</div>
+              <button id="cdClear" class="link-btn">clear</button>
+            </div>
+            <form id="cdForm" class="cd-form">
+              <input id="cdLabelIn" type="text" placeholder="Label (e.g. Biology final)" autocomplete="off" />
+              <input id="cdDateIn" type="date" />
+              <button class="btn btn--soft" type="submit">Set</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="mood">
+          <button class="tool__head"><span>🌈 Mood</span><span id="moodChip" class="pill">—</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <p class="muted small" style="margin-top:0">How are you feeling today? Saved just for you. 💛</p>
+            <div id="moodPopover" class="mood-opts">
+              <button class="mood-opt" data-mood="😄" title="great">😄</button>
+              <button class="mood-opt" data-mood="🙂" title="good">🙂</button>
+              <button class="mood-opt" data-mood="😐" title="meh">😐</button>
+              <button class="mood-opt" data-mood="😟" title="low">😟</button>
+              <button class="mood-opt" data-mood="😴" title="tired">😴</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="breathe">
+          <button class="tool__head"><span>🫧 Breathe</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <p class="muted small" style="margin-top:0">A slow moment before or between sessions.</p>
+            <button id="breatheBtn" class="btn btn--soft">Begin breathing</button>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="look">
+          <button class="tool__head"><span>🎨 Look &amp; feel</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <div class="row-between"><span class="muted small">Dark mode</span>
+              <button id="themeToggle" class="icon-btn" title="Toggle dark mode"><span class="icon-btn__sun">☀️</span><span class="icon-btn__moon">🌙</span></button></div>
+            <p class="muted small" style="margin:12px 0 6px">Garden scene</p>
+            <div class="bg-switch" id="bgSwitch"></div>
+          </div>
+        </div>
+
+        <div class="tool" data-tool="privacy">
+          <button class="tool__head"><span>🔒 Sharing &amp; privacy</span><i class="chev"></i></button>
+          <div class="tool__body">
+            <p class="muted small" style="margin-top:0">Choose whether he can see your study activity. You can change this anytime.</p>
+            <button id="privacyChip" class="btn btn--ghost">Review sharing choice</button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===================== BASKET modal (§5 notes) ===================== -->
+  <div id="basketModal" class="modal" hidden>
+    <div class="modal__box">
+      <div class="modal__head"><h3>Your basket 💌</h3><button id="basketClose" class="icon-btn">✕</button></div>
+      <div class="basket-modal-body">
+        <div id="basketCurrent" class="basket-current"></div>
+        <h4 class="basket-arch-title">Earlier notes</h4>
+        <div id="basketArchive" class="archive-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breathing overlay -->
+  <div id="breatheOverlay" class="breathe" hidden>
+    <div class="breathe__circle"><span id="breatheText">Breathe in…</span></div>
+    <button id="breatheClose" class="btn btn--ghost breathe__close">I'm ready ✨</button>
+  </div>
+
+  <!-- Eat-something nudge -->
+  <div id="eatNudge" class="nudge" hidden>
+    <span id="eatNudgeText">Have you eaten something, Tala? 🍓</span>
+    <button id="eatNudgeClose" class="nudge__x" aria-label="dismiss">✕</button>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
