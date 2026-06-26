@@ -18,6 +18,43 @@
   var theme = Store.get("pref:theme", null);
   if (theme) document.documentElement.setAttribute("data-theme", theme);
 
+  /* ---------- read-only plant preview (mirrors app.js's plant drawing) ---------- */
+  var PLANT_MSGS = ["A little sprout, full of potential 🌱", "Finding its feet 🌿", "Growing nicely 🌿",
+    "First bloom — look at you 🌸", "Blossoming 🌷", "Flowering beautifully 🌸", "Flourishing 🌻",
+    "Bursting with blooms 🌺", "Reaching for the sun ☀️", "Tall and thriving 🌿", "A proper little plant 🌳",
+    "Standing proud 🌟", "Lush and lovely 🌸", "Your garden is thriving ✨", "In glorious full bloom 🌻"];
+  function plantLeaf(x, y, dir, scale) {
+    var rx = 19 * scale, ry = 10 * scale, rot = dir * 28;
+    return '<g transform="rotate(' + rot + ' ' + x + ' ' + y + ')">' +
+      '<ellipse class="pl-leaf" cx="' + x + '" cy="' + y + '" rx="' + rx.toFixed(1) + '" ry="' + ry.toFixed(1) + '"/>' +
+      '<line class="pl-vein" x1="' + (x - rx * 0.78).toFixed(1) + '" y1="' + y + '" x2="' + (x + rx * 0.78).toFixed(1) + '" y2="' + y + '"/></g>';
+  }
+  function plantFlower(cx, cy, scale) {
+    var pr = 11 * scale, s = '<g class="pl-flower">';
+    for (var k = 0; k < 6; k++) {
+      var a = k * Math.PI / 3, px = cx + Math.cos(a) * pr, py = cy + Math.sin(a) * pr;
+      s += '<ellipse cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" rx="' + (9 * scale).toFixed(1) +
+        '" ry="' + (6 * scale).toFixed(1) + '" transform="rotate(' + (a * 180 / Math.PI).toFixed(0) + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ')"/>';
+    }
+    return s + '<circle class="pl-flower-core" cx="' + cx + '" cy="' + cy + '" r="' + (7 * scale).toFixed(1) + '"/></g>';
+  }
+  function plantSvg(lvl) {
+    lvl = Math.max(0, lvl || 0);
+    var W = 220, H = 330, cx = 110, base = 304;
+    var stemTop = base - (40 + lvl * 12);
+    var sway = lvl % 2 ? 12 : -12;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="plant-svg">';
+    s += '<path class="pl-stem" d="M' + cx + ' ' + base + ' C' + (cx - 14) + ' ' + (base - 50) + ' ' + (cx + sway) + ' ' + ((base + stemTop) / 2) + ' ' + cx + ' ' + stemTop + '"/>';
+    var n = 3 + lvl;
+    for (var i = 0; i < n; i++) {
+      var t = (i + 1) / (n + 1), y = base - 14 - (base - 14 - stemTop) * t, dir = i % 2 ? 1 : -1;
+      s += plantLeaf(cx + dir * 18, y, dir, 1.0);
+    }
+    if (lvl >= 3) s += plantFlower(cx, stemTop - 2, Math.min(1 + (lvl - 3) * 0.17, 3.5));
+    else s += '<circle class="pl-bud" cx="' + cx + '" cy="' + (stemTop - 1) + '" r="6"/>';
+    return s + "</svg>";
+  }
+
   function weekStart(d) {
     var x = new Date(d || new Date()); var day = (x.getDay() + 6) % 7;
     x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - day); return x;
@@ -81,10 +118,17 @@
       rows += kv("Open tasks", (data.todosOpen != null ? data.todosOpen : "—"));
       body.innerHTML = rows;
 
+      // her plant (read-only preview) — mirrors the level her dashboard has earned
+      var plantLvl = data.plant != null ? data.plant : 0;
+      var extra = '<h2 style="margin-top:20px;">Her plant</h2>' +
+        '<div class="plant-preview">' + plantSvg(plantLvl) +
+        '<div class="pot pot--mini"><div class="pot__soil"></div><div class="pot__body"></div><div class="pot__rim"></div></div>' +
+        '<p class="plant-preview__msg">' + esc(PLANT_MSGS[Math.min(plantLvl, PLANT_MSGS.length - 1)]) + '</p></div>';
+
       // her tasks (read-only) — synced from her device via the same cloud channel as notes
       var todos = data.todos || [];
       var notes = data.notes || "";
-      var extra = '<h2 style="margin-top:20px;">Her tasks</h2>';
+      extra += '<h2 style="margin-top:20px;">Her tasks</h2>';
       if (todos.length) {
         extra += '<ul class="ro-list">' + todos.map(function (t) {
           return '<li class="' + (t.done ? "done" : "") + '">' + esc(t.text) + "</li>";

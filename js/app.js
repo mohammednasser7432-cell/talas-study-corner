@@ -55,13 +55,16 @@
   }
 
   /* ================= Theme + backgrounds ================= */
+  function toggleTheme() {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next); Store.set("pref:theme", next); applyBackground();
+  }
   function initTheme() {
     var saved = Store.get("pref:theme", null);
     if (saved) document.documentElement.setAttribute("data-theme", saved);
-    $("#themeToggle").addEventListener("click", function () {
-      var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next); Store.set("pref:theme", next); applyBackground();
-    });
+    $("#themeToggle").addEventListener("click", toggleTheme);
+    var sun = $("#sunToggle");
+    if (sun) sun.addEventListener("click", toggleTheme);
   }
   function initBackgrounds() {
     var wrap = $("#bgSwitch"); wrap.innerHTML = "";
@@ -335,7 +338,14 @@
       if (lastLevel !== -1 && lvl > lastLevel) { el.classList.remove("is-grown"); void el.offsetWidth; el.classList.add("is-grown"); }
       lastLevel = lvl;
     }
-    return { render: render, addProgress: addProgress };
+    // Plays the watering-can animation above the plant — called right when a task is checked off.
+    function water() {
+      var can = $("#wateringCan"); if (!can) return;
+      can.classList.remove("is-pouring"); void can.offsetWidth; can.classList.add("is-pouring");
+      clearTimeout(can._wcTimer);
+      can._wcTimer = setTimeout(function () { can.classList.remove("is-pouring"); }, 1500);
+    }
+    return { render: render, addProgress: addProgress, water: water, level: level };
   })();
 
   /* ================= To-do (on the signboard) ================= */
@@ -350,7 +360,7 @@
         var cb = document.createElement("button"); cb.className = "check"; cb.setAttribute("aria-label", "toggle");
         cb.addEventListener("click", function () {
           var items = get(), it = items.find(function (x) { return x.id === t.id; });
-          it.done = !it.done; save(items); if (it.done) { Stats.logTask(); Plant.addProgress(); } render();
+          it.done = !it.done; save(items); if (it.done) { Stats.logTask(); Plant.addProgress(); Plant.water(); } render();
         });
         var span = document.createElement("span"); span.className = "todo__text"; span.textContent = t.text;
         var del = document.createElement("button"); del.className = "x"; del.textContent = "✕";
@@ -537,6 +547,7 @@
         todosOpen: Store.get("todos", []).filter(function (t) { return !t.done; }).length,
         todos: Store.get("todos", []),
         notes: Store.get("notes:pad", ""),
+        plant: Plant.level(),
       }, consent);
     }
     snap(); window.__tscPush = setInterval(snap, 20000);
