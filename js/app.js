@@ -342,6 +342,17 @@
   })();
 
   /* ================= To-do (on the signboard) ================= */
+  function cleanupDoneTodos() {
+    var TWELVE_HRS = 43200000;
+    var items = Store.get("todos", []);
+    var now = Date.now();
+    var filtered = items.filter(function (t) {
+      if (!t.done) return true;
+      if (!t.doneAt) { t.doneAt = now; return true; } // stamp existing done items; give them 12 hrs from now
+      return now - t.doneAt < TWELVE_HRS;
+    });
+    if (filtered.length !== items.length) Store.set("todos", filtered);
+  }
   function initTodo() {
     var list = $("#todoList");
     function get() { return Store.get("todos", []); }
@@ -353,7 +364,7 @@
         var cb = document.createElement("button"); cb.className = "check"; cb.setAttribute("aria-label", "toggle");
         cb.addEventListener("click", function () {
           var items = get(), it = items.find(function (x) { return x.id === t.id; });
-          it.done = !it.done; save(items); if (it.done) { Stats.logTask(); Plant.addProgress(); } render();
+          it.done = !it.done; if (it.done) { it.doneAt = Date.now(); Stats.logTask(); Plant.addProgress(); } else { delete it.doneAt; } save(items); render();
         });
         var span = document.createElement("span"); span.className = "todo__text"; span.textContent = t.text;
         var del = document.createElement("button"); del.className = "x"; del.textContent = "✕";
@@ -510,6 +521,34 @@
     return { init: init };
   })();
 
+  /* ================= §7 DuaFeed (duas sent from panel) ================= */
+  var DuaFeed = (function () {
+    function fmtTime(ts) {
+      if (!ts) return "";
+      var d = new Date(ts);
+      return d.toLocaleDateString([], { month: "short", day: "numeric" }) + " · " +
+             d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    function render(duas) {
+      var el = $("#duaFeedList");
+      if (!el) return;
+      if (!duas || !duas.length) {
+        el.innerHTML = '<p class="muted small" style="text-align:center;padding:12px 0;">No duas yet — he will send some soon 🤍</p>';
+        return;
+      }
+      el.innerHTML = duas.map(function (d) {
+        return '<div class="dua-item"><p class="dua-text">' + esc(d.text) +
+          '</p><time class="dua-time">' + fmtTime(d.at) + '</time></div>';
+      }).join("");
+    }
+    function refresh() { Sync.fetchDuas().then(render); }
+    function init() {
+      refresh();
+      setInterval(refresh, 20000);
+    }
+    return { init: init };
+  })();
+
   /* ================= §6 Sharing (always on) ================= */
   function initConsent() {
     // Sharing is permanently on — make sure the consent log reflects that,
@@ -546,7 +585,10 @@
     Stats.markStreak(); Stats.render(); Streak.render();
     initTodo(); initNotes(); initCountdown();
     Plant.render(); setInterval(Plant.render, 1800000);
+    DuaFeed.init();
     NoteFeed.init();
     initConsent();
+    cleanupDoneTodos();
+    setInterval(cleanupDoneTodos, 300000); // check every 5 min
   });
 })();

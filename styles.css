@@ -337,6 +337,12 @@ body.is-break .ring__fill { stroke: var(--accent-2); }
 .anchor__input { flex: 1; font-family: "Fraunces", serif; font-style: italic; font-size: 0.92rem; border: none; background: transparent; padding: 2px 0; }
 .anchor__input:focus { box-shadow: none; }
 
+/* duas feed */
+.dua-feed { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; padding-right: 2px; }
+.dua-item { background: color-mix(in srgb,var(--accent) 8%,var(--card)); border: 1px solid var(--card-brd); border-radius: 14px; padding: 11px 14px; }
+.dua-text { margin: 0 0 5px; font-size: 0.92rem; line-height: 1.6; direction: auto; white-space: pre-wrap; }
+.dua-time { font-size: 0.72rem; color: var(--ink-soft); }
+
 /* consent + modal */
 
 .modal { position: fixed; inset: 0; z-index: 70; background: rgba(30, 45, 35, 0.42); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; animation: fadeIn 0.3s; }

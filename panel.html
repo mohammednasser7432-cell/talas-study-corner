@@ -59,6 +59,9 @@
     .plant-preview .pot--mini .pot__soil { top: 3px; height: 7px; }
     .plant-preview .pot--mini .pot__body { top: 7px; }
     .plant-preview__msg { margin: 8px 0 0; font-family: "Fraunces", serif; font-style: italic; color: var(--ink-soft); font-size: 0.86rem; }
+    .dua-input-row { display: flex; flex-direction: column; gap: 10px; }
+    .dua-input-row textarea { width: 100%; min-height: 80px; border-radius: 16px; direction: auto; }
+    .dua-hint { font-size: 0.78rem; color: var(--ink-soft); margin: 0 0 8px; }
   </style>
 </head>
 <body>
@@ -93,6 +96,17 @@
       <section class="panel-card" id="progressCard">
         <h2>Progress</h2>
         <div id="progressBody"></div>
+      </section>
+
+      <!-- §7 send a dua to her -->
+      <section class="panel-card">
+        <h2>Send her a Dua 🤲</h2>
+        <p class="muted2 dua-hint" style="margin-top:0;">Write a dua or dhikr for her — it appears instantly in her Duas menu. Ctrl+Enter to send.</p>
+        <div class="dua-input-row">
+          <textarea id="duaInput" placeholder="بسم الله الرحمن الرحيم…"></textarea>
+          <div><button id="duaSendBtn" class="btn btn--soft">Send dua 🌙</button></div>
+        </div>
+        <div id="duaSentList" style="margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>
       </section>
 
       <!-- §5 write a note to her -->

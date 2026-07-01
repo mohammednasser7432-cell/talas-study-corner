@@ -34,6 +34,8 @@
   /* ---------- Local provider (same browser) ---------- */
   function LocalSyncProvider() {}
   LocalSyncProvider.prototype.isRemote = false;
+  LocalSyncProvider.prototype.fetchDuas = function () { return Promise.resolve([]); };
+  LocalSyncProvider.prototype.pushDua = function () { return Promise.resolve({ ok: false }); };
   LocalSyncProvider.prototype.fetchNotes = function () {
     return Promise.resolve(Store.get("from:notes", []));
   };
@@ -91,6 +93,24 @@
       return fetch(self.base + "/notes/" + hit._key + ".json", { method: "DELETE" })
         .then(function (r) { return { ok: r.ok }; });
     }).catch(function () { return { ok: false }; });
+  };
+  RestSyncProvider.prototype._duas = function () { return this.base + "/duas.json"; };
+  RestSyncProvider.prototype.fetchDuas = function () {
+    return fetch(this._duas())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data.filter(Boolean);
+        return Object.keys(data).map(function (k) {
+          return Object.assign({ _key: k }, data[k]);
+        }).sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+      })
+      .catch(function () { return []; });
+  };
+  RestSyncProvider.prototype.pushDua = function (dua) {
+    return fetch(this._duas(), { method: "POST", body: JSON.stringify(dua) })
+      .then(function (r) { return { ok: r.ok }; })
+      .catch(function () { return { ok: false }; });
   };
   RestSyncProvider.prototype.pushActivity = function (snapshot, consent) {
     // Always write so cross-device viewers can see her current consent choice.

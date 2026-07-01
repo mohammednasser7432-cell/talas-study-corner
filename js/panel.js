@@ -30,13 +30,13 @@
       '<line class="pl-vein" x1="' + (x - rx * 0.78).toFixed(1) + '" y1="' + y + '" x2="' + (x + rx * 0.78).toFixed(1) + '" y2="' + y + '"/></g>';
   }
   function plantFlower(cx, cy, scale) {
-    var pr = 11 * scale, s = '<g class="pl-flower">';
+    var pr = 13 * scale, s = '<g class="pl-flower">';
     for (var k = 0; k < 6; k++) {
       var a = k * Math.PI / 3, px = cx + Math.cos(a) * pr, py = cy + Math.sin(a) * pr;
-      s += '<ellipse cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" rx="' + (9 * scale).toFixed(1) +
-        '" ry="' + (6 * scale).toFixed(1) + '" transform="rotate(' + (a * 180 / Math.PI).toFixed(0) + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ')"/>';
+      s += '<ellipse cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" rx="' + (11 * scale).toFixed(1) +
+        '" ry="' + (8 * scale).toFixed(1) + '" transform="rotate(' + (a * 180 / Math.PI).toFixed(0) + ' ' + px.toFixed(1) + ' ' + py.toFixed(1) + ')"/>';
     }
-    return s + '<circle class="pl-flower-core" cx="' + cx + '" cy="' + cy + '" r="' + (7 * scale).toFixed(1) + '"/></g>';
+    return s + '<circle class="pl-flower-core" cx="' + cx + '" cy="' + cy + '" r="' + (9 * scale).toFixed(1) + '"/></g>';
   }
   function plantSvg(lvl) {
     lvl = Math.max(0, lvl || 0);
@@ -50,7 +50,7 @@
       var t = (i + 1) / (n + 1), y = base - 14 - (base - 14 - stemTop) * t, dir = i % 2 ? 1 : -1;
       s += plantLeaf(cx + dir * 18, y, dir, 1.0);
     }
-    if (lvl >= 3) s += plantFlower(cx, stemTop - 2, Math.min(1 + (lvl - 3) * 0.17, 3.5));
+    if (lvl >= 3) s += plantFlower(cx, stemTop - 2, Math.min(1.25 + (lvl - 3) * 0.2, 4.2));
     else s += '<circle class="pl-bud" cx="' + cx + '" cy="' + (stemTop - 1) + '" r="6"/>';
     return s + "</svg>";
   }
@@ -203,11 +203,49 @@
   function esc(s) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   /* ---------- boot + optional passcode gate ---------- */
+  /* ---------- §7 duas — send duas for her to read ---------- */
+  function initDuas() {
+    var list = $("#duaSentList"), btn = $("#duaSendBtn"), inp = $("#duaInput");
+    if (!list || !btn || !inp) return;
+    function fmtTime(ts) {
+      if (!ts) return "";
+      var d = new Date(ts);
+      return d.toLocaleDateString([], { month: "short", day: "numeric" }) + " · " +
+             d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    function renderDuas() {
+      Sync.fetchDuas().then(function (duas) {
+        if (!duas.length) {
+          list.innerHTML = '<p class="muted2" style="margin:10px 0 0;">No duas sent yet — write one above and it will appear in her menu.</p>';
+          return;
+        }
+        list.innerHTML = duas.map(function (d) {
+          return '<div class="sent-note"><div style="flex:1"><p style="direction:auto;font-size:0.93rem;">' +
+            esc(d.text) + '</p><time>' + fmtTime(d.at) + '</time></div></div>';
+        }).join("");
+      });
+    }
+    btn.addEventListener("click", function () {
+      var v = inp.value.trim();
+      if (!v) return;
+      btn.disabled = true;
+      Sync.pushDua({ text: v, at: Date.now() }).then(function (res) {
+        if (res.ok) { inp.value = ""; renderDuas(); }
+        btn.disabled = false;
+      });
+    });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { btn.click(); }
+    });
+    renderDuas();
+  }
+
   function open() {
     $("#gate").hidden = true; $("#panelMain").hidden = false;
-    renderActivity(); renderSent(); initNotes();
+    renderActivity(); renderSent(); initNotes(); initDuas();
     // keep the live view fresh
     setInterval(renderActivity, 15000);
+    setInterval(initDuas, 30000);
   }
   function boot() {
     var pass = CFG.panel && CFG.panel.passcode;
