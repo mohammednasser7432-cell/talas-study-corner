@@ -116,6 +116,7 @@
       rows += kv("Last seen", ago(lastSeen));
       rows += kv("Focus session", data.midPomodoro ? "In a Pomodoro right now 🍃" : "Not mid-session");
       rows += kv("Open tasks", (data.todosOpen != null ? data.todosOpen : "—"));
+      rows += kv("Mood today", data.mood ? '<span style="font-size:1.2em">' + esc(data.mood) + '</span>' : '<span style="color:var(--ink-soft)">Not set yet</span>');
       body.innerHTML = rows;
 
       // her plant (read-only preview) — mirrors the level her dashboard has earned

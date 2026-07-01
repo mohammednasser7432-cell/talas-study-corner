@@ -615,6 +615,7 @@
         todos: Store.get("todos", []),
         notes: Store.get("notes:pad", ""),
         plant: Plant.level(),
+        mood: Store.get("mood:" + todayKey(), null),
       }, "yes");
     }
     snap(); window.__tscPush = setInterval(snap, 20000);
