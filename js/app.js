@@ -523,28 +523,73 @@
 
   /* ================= §7 DuaFeed (duas sent from panel) ================= */
   var DuaFeed = (function () {
+    var lastDuas = [];
+    function seenKeys() { var s = {}; Store.get("duas:seenKeys", []).forEach(function (k) { s[k] = 1; }); return s; }
+    function markSeen(duas) {
+      var s = seenKeys();
+      duas.forEach(function (d) { if (d._key) s[d._key] = 1; });
+      Store.set("duas:seenKeys", Object.keys(s));
+    }
     function fmtTime(ts) {
       if (!ts) return "";
       var d = new Date(ts);
       return d.toLocaleDateString([], { month: "short", day: "numeric" }) + " · " +
              d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
+    function updateHeaderBadge(unreadCount) {
+      var head = document.querySelector('[data-tool="duas"] .tool__head span');
+      if (!head) return;
+      var existing = head.querySelector(".dua-new-dot");
+      if (unreadCount > 0) {
+        if (!existing) {
+          var dot = document.createElement("span");
+          dot.className = "dua-new-dot";
+          dot.textContent = unreadCount;
+          head.appendChild(dot);
+        } else { existing.textContent = unreadCount; }
+      } else {
+        if (existing) existing.remove();
+      }
+    }
     function render(duas) {
       var el = $("#duaFeedList");
       if (!el) return;
-      if (!duas || !duas.length) {
+      lastDuas = duas || [];
+      if (!lastDuas.length) {
         el.innerHTML = '<p class="muted small" style="text-align:center;padding:12px 0;">No duas yet — he will send some soon 🤍</p>';
+        updateHeaderBadge(0);
         return;
       }
-      el.innerHTML = duas.map(function (d) {
-        return '<div class="dua-item"><p class="dua-text">' + esc(d.text) +
-          '</p><time class="dua-time">' + fmtTime(d.at) + '</time></div>';
+      var seen = seenKeys();
+      var unread = lastDuas.filter(function (d) { return d._key && !seen[d._key]; }).length;
+      updateHeaderBadge(unread);
+      el.innerHTML = lastDuas.map(function (d) {
+        var isNew = d._key && !seen[d._key];
+        return '<div class="dua-item">' +
+          (isNew ? '<span class="dua-new-label">NEW</span>' : '') +
+          '<p class="dua-text">' + esc(d.text) + '</p>' +
+          '<time class="dua-time">' + fmtTime(d.at) + '</time></div>';
       }).join("");
     }
     function refresh() { Sync.fetchDuas().then(render); }
     function init() {
       refresh();
       setInterval(refresh, 20000);
+      // mark all as read when she opens the duas drawer section
+      var duaTool = document.querySelector('[data-tool="duas"] .tool__head');
+      if (duaTool) {
+        duaTool.addEventListener("click", function () {
+          setTimeout(function () {
+            var tool = document.querySelector('[data-tool="duas"]');
+            if (tool && tool.classList.contains("is-open")) {
+              markSeen(lastDuas);
+              updateHeaderBadge(0);
+              // remove NEW labels from visible items
+              $$(".dua-new-label").forEach(function (el) { el.remove(); });
+            }
+          }, 50);
+        });
+      }
     }
     return { init: init };
   })();
